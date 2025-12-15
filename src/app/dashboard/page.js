@@ -1,185 +1,153 @@
+// src/app/dashboard/page.js
 "use client";
-import { useState, useEffect, useCallback } from "react";
-import { useUser, UserButton } from "@clerk/nextjs";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+// We import the signOut logic from the client-side library provided by Auth.js
+// Note: If this import fails, ensure you ran 'npm install next-auth@beta'
+import { signOut } from "next-auth/react";
+
+// Keep your existing component imports
 import StatusBadge from "../../components/StatusBadge";
-// 1. Import the new separate component
 import AddJobModal from "../../components/AddJobModal";
 
 export default function Dashboard() {
-  const { isLoaded, isSignedIn, user } = useUser();
-  const [jobs, setJobs] = useState([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  // We still need this state to know IF the modal should show
-  const [showModal, setShowModal] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [jobs, setJobs] = useState([
+    // Example Initial Data - You can replace this with your DB fetch later
+    {
+      id: 1,
+      company: "Google",
+      role: "Frontend Dev",
+      status: "Interview",
+      date: "2024-12-15",
+    },
+    {
+      id: 2,
+      company: "Netflix",
+      role: "UI Engineer",
+      status: "Applied",
+      date: "2024-12-14",
+    },
+  ]);
 
-  // --- Fetch Jobs ---
-  const fetchJobs = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      const res = await fetch(`/api/jobs?t=${Date.now()}`);
-      const data = await res.json();
-      setJobs(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, []);
+  // Mock User Data (Since we are client-side, we can fetch real user data later)
+  const user = { name: "Developer", email: "dev@test.com" };
 
-  useEffect(() => {
-    if (isLoaded && isSignedIn) fetchJobs();
-  }, [isLoaded, isSignedIn, fetchJobs]);
-
-  if (!isLoaded || !isSignedIn) return null;
-
-  // --- Stats Calculation ---
-  const totalJobs = jobs.length;
-  const interviewing = jobs.filter((j) => j.status === "Interviewing").length;
-  const offers = jobs.filter((j) => j.status === "Offer").length;
-  const rejected = jobs.filter((j) => j.status === "Rejected").length;
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/login" });
+  };
 
   return (
-    <div className="flex min-h-screen bg-[#F3F4F6]">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
-        <div className="p-6">
-          <span className="text-2xl">🚀</span>
-          <span className="ml-2 font-bold text-[#111827] text-xl">
-            JobTracker
-          </span>
-        </div>
-        <div className="p-4 border-t border-gray-100 mt-auto">
-          <UserButton showName={true} />
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto relative">
-        <header className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-[#111827]">Dashboard</h1>
-            <p className="text-[#374151] mt-1">
-              Welcome back, {user?.firstName}!
-            </p>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* 1. Header (Replaces Clerk UserButton) */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold">J</span>
+            </div>
+            <span className="text-xl font-bold text-gray-900 tracking-tight">
+              JobTracker
+            </span>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500 hidden sm:block">
+              {user.email}
+            </span>
             <button
-              onClick={fetchJobs}
-              disabled={isRefreshing}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-[#374151] hover:bg-gray-50 transition shadow-sm flex items-center gap-2"
+              onClick={handleLogout}
+              className="text-sm font-medium text-gray-700 hover:text-red-600 transition-colors"
             >
-              <span className={isRefreshing ? "animate-spin" : ""}>↻</span>{" "}
-              Refresh
+              Sign out
             </button>
-            {/* Button just toggles the state now */}
+          </div>
+        </div>
+      </header>
+
+      {/* 2. Main Content */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
+        <div className="sm:flex sm:items-center sm:justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Applications</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Manage and track your ongoing job applications.
+            </p>
+          </div>
+          <div className="mt-4 sm:mt-0">
             <button
-              onClick={() => setShowModal(true)}
-              className="px-4 py-2 bg-[#14B8A6] text-white rounded-lg text-sm font-bold hover:bg-teal-600 transition shadow-md"
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
             >
               + Add Job
             </button>
           </div>
-        </header>
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <StatCard
-            title="Total Jobs"
-            value={totalJobs}
-            icon="💼"
-            color="bg-blue-50 text-blue-600"
-          />
-          <StatCard
-            title="Interviewing"
-            value={interviewing}
-            icon="🎤"
-            color="bg-purple-50 text-purple-600"
-          />
-          <StatCard
-            title="Offers"
-            value={offers}
-            icon="🎉"
-            color="bg-green-50 text-green-600"
-          />
-          <StatCard
-            title="Rejected"
-            value={rejected}
-            icon="❌"
-            color="bg-red-50 text-red-600"
-          />
         </div>
 
-        {/* Job Grid */}
-        {jobs.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
-            <div className="text-5xl mb-4">📝</div>
-            <p className="text-gray-500 font-medium">No jobs yet.</p>
-            <p className="text-gray-400 text-sm mt-1">
-              Click "Add Job" to start tracking!
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {jobs.map((job, index) => (
-              <JobCard key={index} job={job} />
-            ))}
-          </div>
-        )}
+        {/* Job List Container */}
+        <div className="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
+          {jobs.length > 0 ? (
+            <ul className="divide-y divide-gray-200">
+              {jobs.map((job) => (
+                <li key={job.id} className="hover:bg-gray-50 transition-colors">
+                  <div className="px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      {/* Company Icon Placeholder */}
+                      <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-lg">
+                        {job.company.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-blue-600 truncate">
+                          {job.role}
+                        </p>
+                        <p className="text-sm text-gray-500">{job.company}</p>
+                      </div>
+                    </div>
 
-        {/* 2. Render the new component here.
-          We pass it the 'showModal' state, and functions to close itself and refresh data.
-        */}
-        <AddJobModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          onJobAdded={fetchJobs}
-        />
+                    <div className="flex items-center gap-6">
+                      <div className="hidden sm:block text-sm text-gray-500">
+                        {job.date}
+                      </div>
+
+                      {/* Use your existing StatusBadge component */}
+                      <StatusBadge status={job.status} />
+
+                      <button className="text-gray-400 hover:text-gray-600">
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-sm">No jobs tracked yet.</p>
+            </div>
+          )}
+        </div>
       </main>
-    </div>
-  );
-}
 
-// --- Sub-Components (Keep these here for now) ---
-function StatCard({ title, value, icon, color }) {
-  return (
-    <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
-      <div>
-        <p className="text-sm text-gray-500 font-medium">{title}</p>
-        <p className="text-2xl font-bold text-[#111827] mt-1">{value}</p>
-      </div>
-      <div
-        className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${color}`}
-      >
-        {icon}
-      </div>
-    </div>
-  );
-}
-
-function JobCard({ job }) {
-  return (
-    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition group relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-1 h-full bg-[#14B8A6]"></div>
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="font-bold text-lg text-[#111827] truncate pr-2">
-          {job.job_title}
-        </h3>
-        <StatusBadge currentStatus={job.status} companyName={job.company} />
-      </div>
-      <p className="text-[#14B8A6] font-medium text-sm mb-4">{job.company}</p>
-      <div className="space-y-2 text-sm text-gray-500 mb-4">
-        <p>📅 {job.application_date || "N/A"}</p>
-        <p>📍 {job.job_location || "Remote"}</p>
-      </div>
-      {job.application_url && (
-        <a
-          href={job.application_url}
-          target="_blank"
-          className="block text-center text-sm text-[#14B8A6] hover:underline font-medium"
-        >
-          View Post
-        </a>
+      {/* 3. Modal (Uses your existing component) */}
+      {isModalOpen && (
+        <AddJobModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
       )}
     </div>
   );

@@ -1,17 +1,15 @@
-import { ClerkProvider } from "@clerk/nextjs";
-import "./globals.css";
+// src/app/layout.js
+import "./globals.css"; // or wherever your css is
 
 export const metadata = {
   title: "Job Tracker",
-  description: "Track your job applications intelligently",
+  description: "Track your job applications",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className="bg-[#F3F4F6] text-[#374151]">{children}</body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body>{children}</body>
+    </html>
   );
 }

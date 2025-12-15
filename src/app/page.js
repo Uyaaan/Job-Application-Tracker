@@ -1,55 +1,109 @@
 // src/app/page.js
-"use client";
+import { auth, signOut } from "@/auth";
 import Link from "next/link";
-import { useUser, SignInButton, SignUpButton } from "@clerk/nextjs";
 
-export default function LandingPage() {
-  const { isSignedIn } = useUser();
+export default async function LandingPage() {
+  // 1. Get the session from the server
+  const session = await auth();
+  const user = session?.user;
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex flex-col justify-center items-center p-6 relative overflow-hidden">
-      {/* Decorative Background */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-[#22D3EE] opacity-10 blur-3xl rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#14B8A6] opacity-10 blur-3xl rounded-full translate-x-1/3 translate-y-1/3"></div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Navigation Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold">J</span>
+            </div>
+            <span className="text-xl font-bold text-gray-900">JobTracker</span>
+          </div>
 
-      <div className="max-w-3xl text-center space-y-8 z-10">
-        <div className="inline-block p-5 bg-white rounded-2xl shadow-xl mb-4 border border-gray-100">
-          <span className="text-6xl">🚀</span>
+          <nav className="flex items-center gap-4">
+            {user ? (
+              <>
+                <span className="text-sm text-gray-600 hidden sm:block">
+                  {user.email}
+                </span>
+                <Link
+                  href="/dashboard"
+                  className="text-sm font-medium text-gray-700 hover:text-gray-900"
+                >
+                  Dashboard
+                </Link>
+                {/* Sign Out Form (Server Action) */}
+                <form
+                  action={async () => {
+                    "use server";
+                    await signOut();
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-900 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </form>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                Sign In
+              </Link>
+            )}
+          </nav>
         </div>
-        <h1 className="text-5xl md:text-6xl font-extrabold text-[#111827] tracking-tight leading-tight">
-          Land Your <span className="text-[#14B8A6]">Dream Job</span>.
+      </header>
+
+      {/* Hero Section */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 text-center">
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight mb-6">
+          Track your job search <br className="hidden sm:block" />
+          <span className="text-blue-600">without the chaos.</span>
         </h1>
-        <p className="text-xl text-[#374151] max-w-lg mx-auto leading-relaxed">
-          Stop losing track of your applications. Organize your job search with
-          your own personal automated dashboard.
+
+        <p className="text-lg text-gray-600 max-w-2xl mb-10">
+          Stop using spreadsheets. Organize your applications, track interview
+          statuses, and land your next role faster with our simple, dedicated
+          tracker.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
-          {isSignedIn ? (
-            <Link href="/dashboard">
-              <button className="px-8 py-4 bg-[#14B8A6] hover:bg-teal-600 text-white text-lg font-bold rounded-full shadow-lg transition transform hover:-translate-y-1">
-                Go to Dashboard →
-              </button>
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 md:text-lg"
+            >
+              Go to Dashboard
             </Link>
           ) : (
             <>
-              <Link href="/sign-up">
-                <button className="px-8 py-4 bg-[#14B8A6] hover:bg-teal-600 text-white text-lg font-bold rounded-full shadow-lg transition transform hover:-translate-y-1">
-                  Get Started for Free
-                </button>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 md:text-lg"
+              >
+                Get Started
               </Link>
-              <div className="text-sm text-[#374151] font-medium">
-                Already have an account?{" "}
-                <Link href="/sign-in">
-                  <span className="text-[#14B8A6] font-bold hover:underline cursor-pointer">
-                    Sign In
-                  </span>
-                </Link>
-              </div>
+              <Link
+                href="/about" // Example secondary link
+                className="inline-flex items-center justify-center px-8 py-3 border border-gray-200 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 md:text-lg"
+              >
+                Learn more
+              </Link>
             </>
           )}
         </div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 py-8">
+        <div className="max-w-7xl mx-auto px-4 text-center text-gray-400 text-sm">
+          &copy; {new Date().getFullYear()} JobTracker. All rights reserved.
+        </div>
+      </footer>
     </div>
   );
 }

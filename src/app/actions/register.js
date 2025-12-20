@@ -1,7 +1,9 @@
-// src/app/actions/register.js
 "use server";
 
 import { z } from "zod";
+import connectDB from "@/lib/db";
+import User from "@/models/User";
+import bcrypt from "bcryptjs";
 
 // --- STRICT REGISTRATION SCHEMA ---
 const registerSchema = z.object({
@@ -27,7 +29,7 @@ export async function registerAction(prevState, formData) {
   const email = formData.get("email");
   const password = formData.get("password");
 
-  // 1. VALIDATE INPUTS
+  // 1. VALIDATE INPUTS (Your original Zod logic)
   const validatedFields = registerSchema.safeParse({ name, email, password });
 
   if (!validatedFields.success) {
@@ -39,15 +41,17 @@ export async function registerAction(prevState, formData) {
         password: fieldErrors.password?.[0],
       },
       success: false,
-      fields: { name, email }, // Send back name/email so they don't re-type
+      fields: { name, email },
     };
   }
 
-  // 2. CHECK IF USER EXISTS (Mock DB Check)
-  // In a real app: await db.user.findUnique({ where: { email } })
-  const MOCK_EXISTING_USER = "dev@test.com";
+  // 2. CONNECT TO DB
+  await connectDB();
 
-  if (email === MOCK_EXISTING_USER) {
+  // 3. CHECK IF USER EXISTS
+  const existingUser = await User.findOne({ email });
+
+  if (existingUser) {
     return {
       errors: { email: "This email is already registered." },
       success: false,
@@ -55,9 +59,22 @@ export async function registerAction(prevState, formData) {
     };
   }
 
-  // 3. CREATE USER (Mock)
-  // await db.user.create({ ... })
+  // 4. HASH PASSWORD
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Return success
-  return { success: true };
+  // 5. CREATE USER
+  try {
+    await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
+    return { success: true };
+  } catch (error) {
+    return {
+      errors: { generic: "Something went wrong. Please try again." },
+      success: false,
+      fields: { name, email },
+    };
+  }
 }

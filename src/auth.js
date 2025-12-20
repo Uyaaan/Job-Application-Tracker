@@ -1,42 +1,54 @@
-// auth.js
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import connectDB from "@/lib/db";
+import User from "@/models/User";
+import bcrypt from "bcryptjs";
+import { MongoDBAdapter } from "@auth/mongodb-adapter";
+import clientPromise from "@/lib/mongodb";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  adapter: MongoDBAdapter(clientPromise),
+  session: { strategy: "jwt" }, // Required when using Credentials with an Adapter
   providers: [
     Credentials({
-      // You can define what the form looks like here, or build a custom UI (we'll do custom)
       credentials: {
         email: {},
         password: {},
       },
       authorize: async (credentials) => {
-        // 1. Connect to your DB here (Postgres, MongoDB, etc.)
-        // const user = await getUserFromDb(credentials.email)
-
-        // MOCK USER FOR TESTING (Remove this later!)
-        const user = {
-          id: "1",
-          name: "Developer",
-          email: "dev@test.com",
-          password: "123",
-        };
-
-        // 2. Check if user exists and password matches
-        if (
-          credentials.email === user.email &&
-          credentials.password === user.password
-        ) {
-          // Return the user object to save it in the session
-          return user;
+        if (!credentials?.email || !credentials?.password) {
+          return null;
         }
 
-        // Return null if login fails
-        return null;
+        await connectDB();
+
+        // 1. Find user in DB
+        const user = await User.findOne({ email: credentials.email });
+
+        if (!user) {
+          return null; // User not found
+        }
+
+        // 2. Check if password matches
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isValid) {
+          return null; // Wrong password
+        }
+
+        // 3. Return user info (this goes into the session)
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+        };
       },
     }),
   ],
   pages: {
-    signIn: "/login", // Tell Auth.js we built our own page here
+    signIn: "/login",
   },
 });

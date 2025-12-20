@@ -1,46 +1,39 @@
 import mongoose from "mongoose";
 
-const JobSchema = new mongoose.Schema({
-  clerkId: {
-    type: String,
-    required: true, // Links the job to the specific user
+const JobSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true, // Links the job to the user who created it
+    },
+    company: {
+      type: String,
+      required: [true, "Please provide a company name"],
+      maxlength: 50,
+    },
+    position: {
+      type: String,
+      required: [true, "Please provide a position title"],
+      maxlength: 100,
+    },
+    status: {
+      type: String,
+      enum: ["Applied", "Interviewing", "Offer", "Rejected"],
+      default: "Applied",
+    },
+    jobType: {
+      type: String,
+      enum: ["Remote", "On-site", "Hybrid"],
+      default: "On-site",
+    },
+    dateApplied: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  job_title: {
-    type: String,
-    required: true,
-  },
-  company: {
-    type: String,
-    required: true,
-  },
-  status: {
-    type: String,
-    default: "Applied",
-    enum: [
-      "Applied",
-      "For Interview",
-      "Interviewing",
-      "Offer Received",
-      "Rejected",
-    ],
-  },
-  application_date: {
-    type: String, // Keeping as String to match your current frontend format
-  },
-  job_location: {
-    type: String,
-  },
-  application_url: {
-    type: String,
-  },
-  interview_scheduled: {
-    type: Boolean,
-    default: false,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: true }
+); // Adds createdAt and updatedAt automatically
 
+// Prevent recompiling the model if it already exists
 export default mongoose.models.Job || mongoose.model("Job", JobSchema);

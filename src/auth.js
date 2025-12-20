@@ -1,14 +1,15 @@
 import NextAuth from "next-auth";
+import { authConfig } from "./auth.config"; // Import the safe config
 import Credentials from "next-auth/providers/credentials";
+import { MongoDBAdapter } from "@auth/mongodb-adapter";
+import clientPromise from "@/lib/mongodb";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
-import { MongoDBAdapter } from "@auth/mongodb-adapter";
-import clientPromise from "@/lib/mongodb";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig, // Spread the base config here
   adapter: MongoDBAdapter(clientPromise),
-  session: { strategy: "jwt" }, // Required when using Credentials with an Adapter
   providers: [
     Credentials({
       credentials: {
@@ -22,24 +23,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         await connectDB();
 
-        // 1. Find user in DB
         const user = await User.findOne({ email: credentials.email });
 
         if (!user) {
-          return null; // User not found
+          return null;
         }
 
-        // 2. Check if password matches
         const isValid = await bcrypt.compare(
           credentials.password,
           user.password
         );
 
         if (!isValid) {
-          return null; // Wrong password
+          return null;
         }
 
-        // 3. Return user info (this goes into the session)
         return {
           id: user._id.toString(),
           name: user.name,
@@ -48,7 +46,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  pages: {
-    signIn: "/login",
-  },
 });

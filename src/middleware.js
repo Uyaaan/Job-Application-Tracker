@@ -1,20 +1,9 @@
-// middleware.js
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth;
-  const isOnLoginPage = req.nextUrl.pathname.startsWith("/login");
+export default NextAuth(authConfig).auth;
 
-  if (isOnLoginPage && isLoggedIn) {
-    return Response.redirect(new URL("/", req.nextUrl));
-  }
-
-  if (!isOnLoginPage && !isLoggedIn) {
-    return Response.redirect(new URL("/login", req.nextUrl));
-  }
-});
-
-// Configure which paths the middleware runs on
 export const config = {
+  // Prevent middleware from running on static files or API routes
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

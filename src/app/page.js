@@ -102,7 +102,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-100 p-4 font-sans">
-      <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-5xl min-h-[600px] md:min-h-[700px]">
+      <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-5xl min-h-150 md:min-h-175">
         {/* --- SIGN UP FORM (Right Side) --- */}
         <div
           className={`absolute top-0 h-full w-full md:w-1/2 transition-all duration-700 ease-in-out bg-white z-10

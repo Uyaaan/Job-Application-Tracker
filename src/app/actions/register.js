@@ -8,14 +8,7 @@ import bcrypt from "bcryptjs";
 // --- STRICT REGISTRATION SCHEMA ---
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Invalid email format")
-    .regex(
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      "Please enter a valid email domain (e.g., .com, .net)"
-    ),
+  email: z.string().min(1, "Email is required").email("Invalid email format"),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
@@ -29,10 +22,12 @@ export async function registerAction(prevState, formData) {
   const email = formData.get("email");
   const password = formData.get("password");
 
-  // 1. VALIDATE INPUTS (Your original Zod logic)
+  console.log("1. Received Register Request:", { name, email }); // DEBUG LOG
+
   const validatedFields = registerSchema.safeParse({ name, email, password });
 
   if (!validatedFields.success) {
+    console.log("2. Validation Failed"); // DEBUG LOG
     const fieldErrors = validatedFields.error.flatten().fieldErrors;
     return {
       errors: {
@@ -45,34 +40,35 @@ export async function registerAction(prevState, formData) {
     };
   }
 
-  // 2. CONNECT TO DB
-  await connectDB();
-
-  // 3. CHECK IF USER EXISTS
-  const existingUser = await User.findOne({ email });
-
-  if (existingUser) {
-    return {
-      errors: { email: "This email is already registered." },
-      success: false,
-      fields: { name, email },
-    };
-  }
-
-  // 4. HASH PASSWORD
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // 5. CREATE USER
   try {
-    await User.create({
+    await connectDB();
+    console.log("3. DB Connected"); // DEBUG LOG
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      console.log("4. User already exists"); // DEBUG LOG
+      return {
+        errors: { email: "This email is already registered." },
+        success: false,
+        fields: { name, email },
+      };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Attempt to create user
+    const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
     });
+
+    console.log("5. User Created Successfully:", newUser._id); // DEBUG LOG
     return { success: true };
   } catch (error) {
+    console.error("CRITICAL REGISTRATION ERROR:", error); // DEBUG LOG
     return {
-      errors: { generic: "Something went wrong. Please try again." },
+      errors: { generic: "Database Error: " + error.message },
       success: false,
       fields: { name, email },
     };

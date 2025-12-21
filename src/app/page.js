@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useFormState, useFormStatus } from "react-dom";
-// Updated import path for the root directory
+import { useState, useEffect, useActionState } from "react"; // Moved here from react-dom
+import { useFormStatus } from "react-dom";
 import { loginAction } from "./actions/login";
 import { registerAction } from "./actions/register";
 import { useRouter } from "next/navigation";
@@ -24,7 +23,7 @@ function SubmitButton({ text, loadingText, colorClass }) {
   );
 }
 
-// --- LOGIN BUTTON COMPONENT ---
+// --- LOGIN BUTTON COMPONENT (With Lockout) ---
 function LoginSubmitButton({ countdown }) {
   const { pending } = useFormStatus();
   const isLocked = countdown > 0;
@@ -55,13 +54,14 @@ export default function HomePage() {
   const router = useRouter();
   const [isSignUp, setIsSignUp] = useState(false);
 
-  const [loginState, loginDispatch] = useFormState(loginAction, {
+  // FIXED: Switched to useActionState (React 19 standard)
+  const [loginState, loginDispatch] = useActionState(loginAction, {
     errors: {},
     success: false,
     fields: {},
   });
 
-  const [registerState, registerDispatch] = useFormState(registerAction, {
+  const [registerState, registerDispatch] = useActionState(registerAction, {
     errors: {},
     success: false,
     fields: {},
@@ -69,12 +69,14 @@ export default function HomePage() {
 
   const [countdown, setCountdown] = useState(0);
 
+  // Sync server lockout time
   useEffect(() => {
     if (loginState?.lockout && loginState.lockout > 0) {
       setCountdown(loginState.lockout);
     }
   }, [loginState]);
 
+  // Countdown timer
   useEffect(() => {
     if (countdown > 0) {
       const timer = setInterval(() => setCountdown((prev) => prev - 1), 1000);
@@ -82,22 +84,26 @@ export default function HomePage() {
     }
   }, [countdown]);
 
+  // Redirect on Login Success
   useEffect(() => {
     if (loginState?.success) {
       router.push("/dashboard");
     }
   }, [loginState?.success, router]);
 
+  // Toggle View on Register Success
   useEffect(() => {
     if (registerState?.success) {
       setIsSignUp(false);
+      // Optional: Add a toast notification here
+      alert("Account created successfully! Please sign in.");
     }
   }, [registerState?.success]);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-100 p-4 font-sans">
       <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-5xl min-h-[600px] md:min-h-[700px]">
-        {/* --- SIGN UP FORM --- */}
+        {/* --- SIGN UP FORM (Right Side) --- */}
         <div
           className={`absolute top-0 h-full w-full md:w-1/2 transition-all duration-700 ease-in-out bg-white z-10
             ${
@@ -110,9 +116,10 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               Create Account
             </h2>
-            <p className="text-gray-500 mb-6">Godspeed.</p>
+            <p className="text-gray-500 mb-6">Start tracking your journey.</p>
 
             <form action={registerDispatch} className="space-y-4">
+              {/* Name Input */}
               <div>
                 <input
                   name="name"
@@ -131,6 +138,8 @@ export default function HomePage() {
                   </p>
                 )}
               </div>
+
+              {/* Email Input */}
               <div>
                 <input
                   name="email"
@@ -149,6 +158,8 @@ export default function HomePage() {
                   </p>
                 )}
               </div>
+
+              {/* Password Input */}
               <div>
                 <input
                   name="password"
@@ -166,6 +177,7 @@ export default function HomePage() {
                   </p>
                 )}
               </div>
+
               <SubmitButton
                 text="Sign Up"
                 loadingText="Creating..."
@@ -185,7 +197,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* --- LOGIN FORM --- */}
+        {/* --- LOGIN FORM (Left Side) --- */}
         <div
           className={`absolute top-0 h-full w-full md:w-1/2 transition-all duration-700 ease-in-out bg-white z-20
             ${
@@ -277,7 +289,7 @@ export default function HomePage() {
               ${isSignUp ? "translate-x-1/2" : "translate-x-0"}
             `}
           >
-            {/* LOGIN PROMPT (Left Panel) */}
+            {/* LOGIN PROMPT (Visible when form is Login) */}
             <div className="absolute top-0 right-0 w-1/2 h-full flex flex-col items-center justify-center text-center px-12 text-white">
               <img
                 src="https://images.unsplash.com/photo-1496171367470-9ed9a91ea931?q=80&w=1740&auto=format&fit=crop"
@@ -301,7 +313,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* REGISTER PROMPT (Right Panel) */}
+            {/* REGISTER PROMPT (Visible when form is Register) */}
             <div className="absolute top-0 left-0 w-1/2 h-full flex flex-col items-center justify-center text-center px-12 text-white">
               <img
                 src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=1742&auto=format&fit=crop"

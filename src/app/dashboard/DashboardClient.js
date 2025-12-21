@@ -15,7 +15,6 @@ export default function DashboardClient({ user, initialJobs }) {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {/* UPDATED: Green Logo Background */}
             <div className="bg-green-600 w-8 h-8 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold">J</span>
             </div>
@@ -49,7 +48,6 @@ export default function DashboardClient({ user, initialJobs }) {
             </p>
           </div>
           <div className="mt-4 sm:mt-0">
-            {/* UPDATED: Green Button */}
             <button
               onClick={() => setIsModalOpen(true)}
               className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all"
@@ -60,13 +58,18 @@ export default function DashboardClient({ user, initialJobs }) {
         </div>
 
         {/* Job List Container */}
-        <div className="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
+        {/* FIXED: Removed 'overflow-hidden' so the dropdown isn't cut off */}
+        <div className="bg-white shadow-sm border border-gray-200 rounded-xl">
           {jobs.length > 0 ? (
             <ul className="divide-y divide-gray-200">
-              {jobs.map((job) => (
+              {jobs.map((job, index) => (
                 <li
                   key={job._id}
-                  className="hover:bg-gray-50 transition-colors"
+                  // Added logic to round the first and last items manually
+                  className={`hover:bg-gray-50 transition-colors 
+                    ${index === 0 ? "rounded-t-xl" : ""} 
+                    ${index === jobs.length - 1 ? "rounded-b-xl" : ""}
+                  `}
                 >
                   <div className="px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -75,7 +78,6 @@ export default function DashboardClient({ user, initialJobs }) {
                         {job.company.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        {/* UPDATED: Green Link */}
                         <a
                           href={job.url}
                           target="_blank"
@@ -103,7 +105,7 @@ export default function DashboardClient({ user, initialJobs }) {
               ))}
             </ul>
           ) : (
-            <div className="text-center py-12">
+            <div className="text-center py-12 rounded-xl">
               <svg
                 className="mx-auto h-12 w-12 text-gray-400"
                 fill="none"

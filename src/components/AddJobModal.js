@@ -16,7 +16,7 @@ export default function AddJobModal({ isOpen, onClose }) {
     try {
       const result = await createJob(formData);
       if (result.success) {
-        onClose(); // Close modal on success
+        onClose();
       } else {
         alert(result.error);
       }
@@ -27,9 +27,9 @@ export default function AddJobModal({ isOpen, onClose }) {
     }
   }
 
-  // Shared class for styling
+  // UPDATED: Changed focus ring to green-600
   const inputClass =
-    "w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14B8A6] focus:border-transparent outline-none transition text-gray-900 placeholder:text-gray-400";
+    "w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent outline-none transition text-gray-900 placeholder:text-gray-400";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0 bg-gray-900/50 backdrop-blur-sm transition-opacity">
@@ -40,10 +40,8 @@ export default function AddJobModal({ isOpen, onClose }) {
           </h3>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Hidden Default Status */}
             <input type="hidden" name="status" value="Applied" />
 
-            {/* Job Title */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">
                 Job Title <span className="text-red-500">*</span>
@@ -57,7 +55,6 @@ export default function AddJobModal({ isOpen, onClose }) {
               />
             </div>
 
-            {/* Company */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">
                 Company <span className="text-red-500">*</span>
@@ -71,7 +68,6 @@ export default function AddJobModal({ isOpen, onClose }) {
               />
             </div>
 
-            {/* Location & Date */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">
@@ -98,7 +94,6 @@ export default function AddJobModal({ isOpen, onClose }) {
               </div>
             </div>
 
-            {/* URL */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">
                 Link / URL
@@ -111,12 +106,12 @@ export default function AddJobModal({ isOpen, onClose }) {
               />
             </div>
 
-            {/* Buttons */}
             <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 -mx-6 -mb-6 mt-6 rounded-b-xl">
+              {/* UPDATED: Changed background to bg-green-600 */}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex w-full justify-center rounded-lg bg-[#14B8A6] px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-teal-700 sm:ml-3 sm:w-auto disabled:opacity-50 transition"
+                className="inline-flex w-full justify-center rounded-lg bg-green-600 px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-green-700 sm:ml-3 sm:w-auto disabled:opacity-50 transition"
               >
                 {isSubmitting ? "Saving..." : "Save Application"}
               </button>

@@ -7,7 +7,7 @@ import AddJobModal from "@/components/AddJobModal";
 
 export default function DashboardClient({ user, initialJobs }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const jobs = initialJobs; // In Server Actions, data refreshes automatically via props
+  const jobs = initialJobs;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -15,7 +15,8 @@ export default function DashboardClient({ user, initialJobs }) {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center">
+            {/* UPDATED: Green Logo Background */}
+            <div className="bg-green-600 w-8 h-8 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold">J</span>
             </div>
             <span className="text-xl font-bold text-gray-900 tracking-tight">
@@ -48,9 +49,10 @@ export default function DashboardClient({ user, initialJobs }) {
             </p>
           </div>
           <div className="mt-4 sm:mt-0">
+            {/* UPDATED: Green Button */}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all"
             >
               + Add Job
             </button>
@@ -73,11 +75,12 @@ export default function DashboardClient({ user, initialJobs }) {
                         {job.company.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
+                        {/* UPDATED: Green Link */}
                         <a
                           href={job.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm font-medium text-blue-600 truncate hover:underline"
+                          className="text-sm font-medium text-green-600 truncate hover:underline hover:text-green-700"
                         >
                           {job.title}
                         </a>
@@ -92,7 +95,7 @@ export default function DashboardClient({ user, initialJobs }) {
                         {job.date}
                       </div>
 
-                      {/* Status Badge with ID passed in */}
+                      {/* Status Badge */}
                       <StatusBadge jobId={job._id} currentStatus={job.status} />
                     </div>
                   </div>

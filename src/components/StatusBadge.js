@@ -19,7 +19,6 @@ export default function StatusBadge({ jobId, currentStatus }) {
     const newStatus = e.target.value;
     const oldStatus = status;
 
-    // Optimistic UI Update (change it immediately)
     setStatus(newStatus);
     setLoading(true);
 
@@ -31,7 +30,7 @@ export default function StatusBadge({ jobId, currentStatus }) {
     } catch (err) {
       console.error(err);
       alert("Failed to update status");
-      setStatus(oldStatus); // Revert if failed
+      setStatus(oldStatus);
     } finally {
       setLoading(false);
     }
@@ -46,7 +45,8 @@ export default function StatusBadge({ jobId, currentStatus }) {
         value={status}
         onChange={handleChange}
         disabled={loading}
-        className={`appearance-none font-medium text-xs px-3 py-1 rounded-full cursor-pointer border focus:ring-2 focus:ring-offset-1 focus:ring-blue-300 outline-none transition-colors ${currentStyle}`}
+        // UPDATED: Focus ring is now green-300
+        className={`appearance-none font-medium text-xs px-3 py-1 rounded-full cursor-pointer border focus:ring-2 focus:ring-offset-1 focus:ring-green-300 outline-none transition-colors ${currentStyle}`}
       >
         <option value="Applied" className="bg-white text-gray-800">
           Applied
@@ -67,7 +67,8 @@ export default function StatusBadge({ jobId, currentStatus }) {
 
       {loading && (
         <div className="absolute top-0 right-0 -mr-3 flex items-center h-full">
-          <div className="animate-spin h-3 w-3 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+          {/* UPDATED: Spinner is now green-500 */}
+          <div className="animate-spin h-3 w-3 border-2 border-green-500 rounded-full border-t-transparent"></div>
         </div>
       )}
     </div>

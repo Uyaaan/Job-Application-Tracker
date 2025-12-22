@@ -3,15 +3,39 @@
 import { useState } from "react";
 import { signOut } from "next-auth/react";
 import StatusBadge from "@/components/StatusBadge";
-import AddJobModal from "@/components/AddJobModal";
+import JobModal from "@/components/JobModal"; // UPDATED IMPORT
+import { deleteJob } from "@/actions/deleteJob";
 
 export default function DashboardClient({ user, initialJobs }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingJob, setEditingJob] = useState(null); // Tracks which job we are editing
+  const [openMenuId, setOpenMenuId] = useState(null); // Tracks which dropdown menu is open
+
   const jobs = initialJobs;
+
+  // Handler to open "Add Job" mode
+  const handleAddJob = () => {
+    setEditingJob(null); // Ensure we are in "Add" mode
+    setIsModalOpen(true);
+  };
+
+  // Handler to open "Edit Job" mode
+  const handleEditJob = (job) => {
+    setEditingJob(job); // Pre-fill the modal with this job
+    setOpenMenuId(null); // Close the menu
+    setIsModalOpen(true);
+  };
+
+  // Handler to delete
+  const handleDeleteJob = async (jobId) => {
+    setOpenMenuId(null);
+    if (confirm("Are you sure you want to delete this job?")) {
+      await deleteJob(jobId);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* 1. Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -22,7 +46,6 @@ export default function DashboardClient({ user, initialJobs }) {
               JobTracker
             </span>
           </div>
-
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500 hidden sm:block">
               {user.email}
@@ -37,9 +60,15 @@ export default function DashboardClient({ user, initialJobs }) {
         </div>
       </header>
 
-      {/* 2. Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
+        {/* Click background to close menus */}
+        {openMenuId && (
+          <div
+            className="fixed inset-0 z-0 cursor-default"
+            onClick={() => setOpenMenuId(null)}
+          />
+        )}
+
         <div className="sm:flex sm:items-center sm:justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Applications</h1>
@@ -49,7 +78,7 @@ export default function DashboardClient({ user, initialJobs }) {
           </div>
           <div className="mt-4 sm:mt-0">
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={handleAddJob}
               className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all"
             >
               + Add Job
@@ -57,15 +86,12 @@ export default function DashboardClient({ user, initialJobs }) {
           </div>
         </div>
 
-        {/* Job List Container */}
-        {/* FIXED: Removed 'overflow-hidden' so the dropdown isn't cut off */}
-        <div className="bg-white shadow-sm border border-gray-200 rounded-xl">
+        <div className="bg-white shadow-sm border border-gray-200 rounded-xl relative z-0">
           {jobs.length > 0 ? (
             <ul className="divide-y divide-gray-200">
               {jobs.map((job, index) => (
                 <li
                   key={job._id}
-                  // Added logic to round the first and last items manually
                   className={`hover:bg-gray-50 transition-colors 
                     ${index === 0 ? "rounded-t-xl" : ""} 
                     ${index === jobs.length - 1 ? "rounded-b-xl" : ""}
@@ -73,7 +99,6 @@ export default function DashboardClient({ user, initialJobs }) {
                 >
                   <div className="px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      {/* Company Icon Placeholder */}
                       <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-lg shrink-0">
                         {job.company.charAt(0).toUpperCase()}
                       </div>
@@ -97,8 +122,49 @@ export default function DashboardClient({ user, initialJobs }) {
                         {job.date}
                       </div>
 
-                      {/* Status Badge */}
                       <StatusBadge jobId={job._id} currentStatus={job.status} />
+
+                      {/* --- KEBAB MENU (Edit/Delete) --- */}
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(
+                              openMenuId === job._id ? null : job._id
+                            );
+                          }}
+                          className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                          </svg>
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {openMenuId === job._id && (
+                          <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+                            <div className="py-1">
+                              <button
+                                onClick={() => handleEditJob(job)}
+                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                ✏️ Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteJob(job._id)}
+                                className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                              >
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {/* --- END MENU --- */}
                     </div>
                   </div>
                 </li>
@@ -130,8 +196,11 @@ export default function DashboardClient({ user, initialJobs }) {
         </div>
       </main>
 
-      {/* 3. Modal */}
-      <AddJobModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <JobModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        jobToEdit={editingJob}
+      />
     </div>
   );
 }
